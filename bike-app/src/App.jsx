@@ -87,13 +87,13 @@ const GlobalStyles = () => (
 );
 
 // --- FIREBASE CONFIGURATION ---
-const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-  apiKey: "AIzaSyA6qm-Hfh9tlog8SW_eAZvK8wzjNGQHvk4",
-  authDomain: "mybikemanager-219f1.firebaseapp.com",
-  projectId: "mybikemanager-219f1",
-  storageBucket: "mybikemanager-219f1.firebasestorage.app",
-  messagingSenderId: "159493239178",
-  appId: "1:159493239178:web:f6ee957157508041121873"
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
 const app = initializeApp(firebaseConfig);
