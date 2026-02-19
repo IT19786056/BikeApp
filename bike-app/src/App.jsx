@@ -19,18 +19,31 @@ const GlobalStyles = () => (
       font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
       color: #111827; -webkit-font-smoothing: antialiased;
     }
-    .insurance-container {
-      width: 100%; max-width: 440px; margin: 0 auto; background-color: #FFEB3B;
-      border-radius: 14px; border: 1px solid #c9b000; box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.15);
-      overflow: hidden; aspect-ratio: 1.58 / 1; display: flex; flex-direction: column;
-      color: #000; font-size: clamp(8.5px, 2.6vw, 11px); min-height: 250px;
+    .ceylinco-card {
+      width: 100%; max-width: 440px; margin: 0 auto; background-color: #F8E71C;
+      border-radius: 8px; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+      overflow: hidden; display: flex; flex-direction: column;
+      color: #000; font-family: Arial, Helvetica, sans-serif; min-height: 250px;
     }
-    .ins-header { background-color: #000; color: #fff; padding: 2% 3.5%; display: flex; align-items: center; gap: 3%; }
-    .ins-logo-box { background-color: #fff; border-radius: 4px; padding: 2px; width: 13%; min-width: 44px; text-align: center; flex-shrink: 0; }
-    .ins-body { padding: 3% 4%; flex: 1; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
-    .ins-grid { display: grid; grid-template-columns: 28% 1fr 18%; gap: 1.5% 3%; margin-top: 1%; }
-    .ins-label { font-weight: bold; opacity: 0.8; text-transform: uppercase; font-size: 0.75em; white-space: nowrap; }
-    .ins-value { font-weight: 800; text-transform: uppercase; font-size: 0.92em; letter-spacing: -0.1px; line-height: 1.1; }
+    .c-header { background-color: #1A1A1A; color: #fff; padding: 12px 14px; display: flex; gap: 12px; align-items: center; }
+    .c-logo-box { 
+      background-color: #F8E71C; color: #000; border-radius: 4px; padding: 4px 6px; 
+      display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 60px;
+    }
+    .c-logo-box .ceylinco-txt { font-weight: 900; font-size: 8px; letter-spacing: 0.5px; }
+    .c-logo-box .vip-oval { border: 1px solid #000; border-radius: 50%; padding: 0px 8px; font-weight: 900; font-size: 11px; margin: 2px 0; }
+    .c-logo-box .ots-txt { color: #d32f2f; font-weight: 900; font-size: 6px; text-align: center; line-height: 1.1; }
+    .c-header-text { flex: 1; text-align: center; }
+    .c-title-1 { font-weight: bold; font-size: 13px; letter-spacing: 0.5px; white-space: nowrap; }
+    .c-title-sub { font-size: 9px; margin-top: 2px; color: #ccc; }
+    .c-title-main { font-weight: bold; font-size: 15px; margin-top: 4px; }
+    .c-body { padding: 16px; position: relative; font-size: 13px; display: flex; flex-direction: column; flex: 1; }
+    .c-card-no { position: absolute; top: 12px; right: 16px; font-family: 'Courier New', Courier, monospace; font-size: 15px; font-weight: bold; letter-spacing: 0.5px; color: #222; }
+    .c-grid { display: grid; grid-template-columns: 115px 1fr auto; gap: 4px 8px; margin-top: 24px; flex: 1; }
+    .c-label { font-weight: 600; color: #222; font-size: 12.5px; }
+    .c-value { font-weight: 700; color: #000; font-size: 12.5px; }
+    .c-footer { font-size: 11px; margin-top: 12px; font-weight: 500; color: #222; }
+    
     .revenue-paper {
       width: 100%; max-width: 380px; margin: 0 auto;
       background-color: #B291C2; 
@@ -328,29 +341,54 @@ export default function App() {
         </div>
 
         {docTab === 'insurance' ? (
-          <div className="insurance-container">
-            <div className="ins-header">
-              <div className="ins-logo-box">
-                <div style={{fontSize:'0.6em', fontWeight:'bold'}}>CEYLINCO</div>
-                <div style={{backgroundColor:'#FFEB3B', fontWeight:'900', fontSize:'0.9em', padding:'0 2px'}}>VIP</div>
-                <div style={{fontSize:'0.4em', color:'#000'}}>ON THE SPOT</div>
+          <div className="ceylinco-card">
+            <div className="c-header">
+              <div className="c-logo-box">
+                <div className="ceylinco-txt">CEYLINCO</div>
+                <div className="vip-oval">VIP</div>
+                <div className="ots-txt">ON THE SPOT<br/><span style={{fontSize:'5px', fontWeight:'bold'}}>ලෝකෙටම එකයි!</span></div>
               </div>
-              <div style={{flex:1, textAlign:'center'}}>
-                <div style={{fontWeight:'bold', fontSize:'1em', textTransform:'uppercase'}}>Ceylinco General Insurance Ltd <span style={{fontSize:'0.7em', verticalAlign:'top'}}>{insurance.regCode}</span></div>
-                <div style={{fontSize:'0.6em', opacity:0.8, fontStyle:'italic'}}>'Ceylinco House', 69, Janadhipathi Mawatha, Colombo 1.</div>
-                <div style={{fontWeight:'bold', fontSize:'1.1em', marginTop:'4px', borderTop:'1px solid rgba(255,255,255,0.3)', paddingTop:'2px'}}>Certificate of Insurance</div>
+              <div className="c-header-text">
+                <div className="c-title-1">CEYLINCO GENERAL INSURANCE LTD <span style={{fontSize:'8px', fontWeight:'bold'}}>{insurance.regCode || 'PB5184'}</span></div>
+                <div className="c-title-sub">'Ceylinco House', 69, Janadhipathi Mawatha, Colombo 1.</div>
+                <div className="c-title-main">Certificate of Insurance</div>
               </div>
             </div>
-            <div className="ins-body">
-              <div style={{position:'absolute', top:4, right:12, fontStyle:'italic', opacity:0.6, fontSize:'0.85em', fontWeight:'bold'}}>{insurance.cardNo}</div>
-              <div className="ins-grid">
-                <div className="ins-label">Vehicle No</div><div className="ins-value" style={{fontSize:'1.2em'}}>{bikeData.vehicleNo}</div><div></div>
-                <div className="ins-label">Make & Model</div><div className="ins-value">{bikeData.makeModel}</div><div className="ins-value" style={{textAlign:'right'}}>CD 125</div>
-                <div className="ins-label">Policy No</div><div className="ins-value" style={{gridColumn:'span 2', color:'#0044cc'}}>{insurance.policyNo}</div>
-                <div className="ins-label">Name</div><div className="ins-value" style={{gridColumn:'span 2'}}>{insurance.name}</div>
-                <div className="ins-label">Address</div><div className="ins-value" style={{gridColumn:'span 2', fontSize:'0.8em', lineHeight:1.3}}>{insurance.address}</div>
-                <div className="ins-label">Period</div><div className="ins-value" style={{gridColumn:'span 2'}}>{insurance.periodStart} <span style={{fontWeight:'normal', opacity:0.4}}>To</span> {insurance.periodEnd}</div>
-                <div className="ins-label">Eng/Chassis</div><div className="ins-value" style={{gridColumn:'span 2', fontSize:'0.85em'}}>{insurance.engineNo} / {insurance.chassisNo}</div>
+            
+            <div className="c-body">
+              <div className="c-card-no">{insurance.cardNo}</div>
+              <div className="c-grid">
+                <div className="c-label">Vehicle No</div>
+                <div className="c-value">{bikeData.vehicleNo}</div>
+                <div></div>
+                
+                <div className="c-label">Make & Model</div>
+                <div className="c-value">{bikeData.makeModel?.split(' ')[0] || ''}</div>
+                <div className="c-value" style={{textAlign:'right'}}>{bikeData.makeModel?.split(' ').slice(1).join(' ') || ''}</div>
+                
+                <div className="c-label">Policy No</div>
+                <div className="c-value" style={{gridColumn:'span 2'}}>{insurance.policyNo}</div>
+                
+                <div className="c-label">Name</div>
+                <div className="c-value" style={{gridColumn:'span 2'}}>{insurance.name}</div>
+                
+                <div className="c-label" style={{alignSelf: 'start'}}>Address</div>
+                <div className="c-value" style={{gridColumn:'span 2', lineHeight:'1.3'}}>{insurance.address}</div>
+                
+                <div className="c-label">Period of Cover</div>
+                <div className="c-value" style={{gridColumn:'span 2', display: 'flex', gap: '20px'}}>
+                  <span>{insurance.periodStart}</span> <span style={{fontWeight:'normal'}}>To</span> <span>{insurance.periodEnd}</span>
+                </div>
+                
+                <div className="c-label">Engine No</div>
+                <div className="c-value" style={{gridColumn:'span 2'}}>{insurance.engineNo}</div>
+                
+                <div className="c-label">Chassis No</div>
+                <div className="c-value" style={{gridColumn:'span 2'}}>{insurance.chassisNo}</div>
+              </div>
+              
+              <div className="c-footer">
+                Subject to terms and conditions specified in the policy document.
               </div>
             </div>
           </div>
