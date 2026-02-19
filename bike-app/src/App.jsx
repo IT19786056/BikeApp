@@ -4,7 +4,7 @@ import {
   getFirestore, doc, setDoc, onSnapshot, collection, addDoc, deleteDoc
 } from 'firebase/firestore';
 import { 
-  getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut, setPersistence, browserLocalPersistence
+  getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut
 } from 'firebase/auth';
 import { 
   ShieldCheck, Wrench, CircleDot, Plus, Navigation, 
@@ -137,7 +137,7 @@ export default function App() {
   // LOGIN / LOGOUT HANDLERS
  const handleGoogleLogin = async () => {
     try {
-      await signInWithRedirect(auth, googleProvider);
+      await signInWithPopup(auth, googleProvider);
     } catch (error) {
       console.error("Login Failed:", error.message);
       alert("Login failed. Please try again.");
