@@ -31,13 +31,33 @@ const GlobalStyles = () => (
     .ins-grid { display: grid; grid-template-columns: 28% 1fr 18%; gap: 1.5% 3%; margin-top: 1%; }
     .ins-label { font-weight: bold; opacity: 0.8; text-transform: uppercase; font-size: 0.75em; white-space: nowrap; }
     .ins-value { font-weight: 800; text-transform: uppercase; font-size: 0.92em; letter-spacing: -0.1px; line-height: 1.1; }
-    .revenue-circle {
-      width: 100%; max-width: 330px; aspect-ratio: 1 / 1; border-radius: 50%;
-      background-color: #E1D5E7; border: 12px solid #9271A3; margin: 0 auto;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      padding: 6%; text-align: center; box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.2); color: #4A235A;
-      position: relative; overflow: hidden;
+    .revenue-paper {
+      width: 100%; max-width: 380px; margin: 0 auto;
+      background-color: #B291C2; 
+      background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.06) 0px, rgba(255,255,255,0.06) 2px, transparent 2px, transparent 4px);
+      padding: 12px; border-radius: 6px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2);
     }
+    .revenue-circle {
+      width: 100%; aspect-ratio: 1 / 1; border-radius: 50%;
+      border: 3px solid #2B1D38;
+      background: radial-gradient(circle, #D4C6DF 40%, #A985BB 95%);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 6% 4%; text-align: center; color: #111;
+      position: relative; box-sizing: border-box;
+    }
+    .revenue-circle::before {
+      content: ''; position: absolute; inset: 6px; border-radius: 50%; border: 1px dashed #2B1D38; opacity: 0.5; pointer-events: none;
+    }
+    .revenue-circle::after {
+      content: ''; position: absolute; inset: 12px; border-radius: 50%; border: 1px solid #2B1D38; opacity: 0.2; pointer-events: none;
+    }
+    .rev-row { margin-bottom: 3px; width: 100%; z-index: 2; }
+    .rev-lang-sm { font-size: clamp(5px, 1.8vw, 7px); line-height: 1.3; font-weight: bold; opacity: 0.85; }
+    .rev-lang-md { font-size: clamp(8px, 2.8vw, 12px); font-weight: 900; }
+    .rev-val-lg { font-size: clamp(38px, 12vw, 56px); font-weight: 900; line-height: 1; margin: 2% 0; letter-spacing: 1px; z-index: 2; }
+    .rev-val-md { font-size: clamp(10px, 3.2vw, 14px); font-weight: 900; font-family: 'Times New Roman', serif; letter-spacing: 0.5px; }
+    .rev-flex { display: flex; justify-content: center; gap: 8px; width: 100%; align-items: baseline; z-index: 2; }
+    .rev-lion { position: absolute; font-size: 100px; opacity: 0.05; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; }
     .mobile-wrap { padding: 20px; width: 100%; box-sizing: border-box; }
     .nav-fixed { 
       position: fixed; bottom: 24px; left: 24px; right: 24px; 
@@ -335,19 +355,57 @@ export default function App() {
             </div>
           </div>
         ) : (
-          <div className="revenue-circle">
-            <div style={{fontSize:'8px', fontWeight:'bold'}}>වාහන ආදායම් බලපත්‍රය</div>
-            <div style={{fontSize:'5.5em', fontWeight:'900', lineHeight:1}}>{revenue.year}</div>
-            <div style={{fontSize:'8px', fontWeight:'bold', letterSpacing:'1px'}}>VEHICLE REVENUE LICENCE</div>
-            <div style={{width:'100%', borderTop:'1px solid rgba(0,0,0,0.15)', borderBottom:'1px solid rgba(0,0,0,0.15)', margin:'10px 0', padding:'10px 0'}}>
-              <div style={{fontSize:'1.1em', fontWeight:'bold'}}>LICENCE NO: {revenue.licenceNo}</div>
-              <div style={{fontSize:'0.9em', opacity:0.8, marginTop:'2px'}}>{revenue.class}</div>
+          <div className="revenue-paper">
+            <div className="revenue-circle">
+              <div className="rev-lion">🦁</div>
+              
+              <div className="rev-row" style={{marginTop:'4%'}}>
+                <div className="rev-lang-md">වාහන ආදායම් බලපත්‍රය</div>
+                <div className="rev-lang-sm">வாகன வருமான உத்தரவுப்பத்திரம் / VEHICLE REVENUE LICENCE</div>
+              </div>
+              
+              <div className="rev-val-lg">{revenue.year || "YEAR"}</div>
+              
+              <div className="rev-row">
+                <div className="rev-lang-sm">බලපත්‍ර අංකය / உத்தரவுப் பத்திர இலக்கம் / Licence No :</div>
+                <div className="rev-val-md">{revenue.licenceNo}</div>
+              </div>
+              
+              <div className="rev-row" style={{marginTop:'3px'}}>
+                <div className="rev-lang-sm">වාහනයේ පන්තිය, ඉන්ධන වර්ගය සහ වාහන අංකය<br/>வாகனத்தின் வகுப்பு, எரிபொருள் வகை, பதிவு இலக்கம்<br/>Class of Vehicle, Fuel Type and Vehicle No.</div>
+                <div className="rev-val-md">{revenue.class}</div>
+              </div>
+              
+              <div className="rev-row" style={{marginTop:'4px'}}>
+                <div className="rev-lang-sm">අයිතිකරුගේ නම / உரிமையாளரின் பெயர் / Name of the owner</div>
+                <div className="rev-val-md">{revenue.owner}</div>
+              </div>
+              
+              <div className="rev-flex" style={{marginTop:'4px', justifyContent: 'space-between', padding: '0 15%'}}>
+                <div className="rev-lang-sm">Vet No. <span className="rev-val-md" style={{fontSize:'clamp(8px, 2.5vw, 11px)'}}>{revenue.vetNo}</span></div>
+                <div className="rev-lang-sm">Kg <span className="rev-val-md" style={{fontSize:'clamp(8px, 2.5vw, 11px)'}}>0</span></div>
+              </div>
+              
+              <div className="rev-row" style={{marginTop:'4px'}}>
+                <div className="rev-lang-sm">වාර්ෂික ගාස්තු, හිඟ මුදල් හා දඩ / செலுத்தப்பட்ட வருடாந்தக் கட்டணம்...<br/>Annual Fee, Arrears and Fines Paid</div>
+                <div className="rev-val-md" style={{fontSize: 'clamp(9px, 2.8vw, 12px)'}}>Rs. {revenue.feeBreakdown} = {revenue.fee}</div>
+              </div>
+              
+              <div className="rev-row" style={{marginTop:'6px'}}>
+                <div className="rev-lang-sm">බලපත්‍රයේ වලංගු කාලය / அனுமதிப்பத்திரத்தின் செல்லுபடியாகும் காலம் / The Licence valid from</div>
+                <div className="rev-flex" style={{padding: '0 5%'}}>
+                  <span className="rev-val-md" style={{fontSize:'clamp(9px, 3vw, 12px)'}}>{revenue.validFrom}</span>
+                  <span className="rev-lang-sm">දක්වා වේ / வரை / To</span>
+                  <span className="rev-val-md" style={{fontSize:'clamp(9px, 3vw, 12px)', color: expired ? '#dc2626' : 'inherit'}}>{revenue.validTo}</span>
+                </div>
+              </div>
+              
+              <div className="rev-row" style={{marginTop:'4px', marginBottom:'4%'}}>
+                <div className="rev-lang-sm">දිනය / திகதி / Date: <span className="rev-val-md" style={{fontSize:'clamp(8px, 2.5vw, 11px)'}}>{revenue.issueDate}</span></div>
+                <div className="rev-lang-sm" style={{fontStyle:'italic', marginTop:'6px', opacity:0.6}}>Western Provincial Council</div>
+              </div>
+              
             </div>
-            <div style={{fontSize:'0.75em', opacity:0.6, fontWeight:'bold'}}>OWNER: {revenue.owner}</div>
-            <div style={{fontSize:'1em', fontWeight:'bold', marginTop:'6px', color:'#dc2626'}}>VALID TO: {revenue.validTo}</div>
-            <div style={{fontSize:'0.7em', marginTop:'4px'}}>VET NO: {revenue.vetNo}</div>
-            <div style={{marginTop:'8px', backgroundColor:'rgba(255,255,255,0.5)', padding:'4px 12px', borderRadius:'10px', fontSize:'1.1em', fontWeight:'900'}}>RS. {revenue.fee}</div>
-            <div style={{fontSize:'0.6em', opacity:0.4, marginTop:'10px'}}>Issued on {revenue.issueDate}</div>
           </div>
         )}
       </div>
