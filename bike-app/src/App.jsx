@@ -4,7 +4,7 @@ import {
   getFirestore, doc, setDoc, onSnapshot, collection, addDoc, deleteDoc
 } from 'firebase/firestore';
 import { 
-  getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut
+  getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut, setPersistence, browserLocalPersistence
 } from 'firebase/auth';
 import { 
   ShieldCheck, Wrench, CircleDot, Plus, Navigation, 
