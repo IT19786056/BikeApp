@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ShieldCheck, 
   FileText, 
@@ -8,7 +8,10 @@ import {
   Calendar, 
   Navigation, 
   ChevronRight, 
-  User 
+  User,
+  Sparkles,
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 
 // --- ROBUST STYLING GUARD ---
@@ -24,10 +27,9 @@ const GlobalStyles = () => (
       -webkit-font-smoothing: antialiased;
     }
 
-    /* Standard CSS for Insurance Card - Zero reliance on Tailwind for structure */
     .insurance-container {
       width: 100%;
-      max-width: 420px;
+      max-width: 440px;
       margin: 0 auto;
       background-color: #FFEB3B;
       border-radius: 14px;
@@ -38,14 +40,15 @@ const GlobalStyles = () => (
       display: flex;
       flex-direction: column;
       color: #000;
-      /* Dynamic font sizing based on container width */
-      font-size: clamp(8px, 2.5vw, 11px);
+      /* Adjusted font scaling for better legibility on small screens */
+      font-size: clamp(9px, 2.8vw, 12px);
+      min-height: 240px;
     }
 
     .ins-header {
       background-color: #000;
       color: #fff;
-      padding: 2% 3%;
+      padding: 2.5% 3.5%;
       display: flex;
       align-items: center;
       gap: 3%;
@@ -55,14 +58,14 @@ const GlobalStyles = () => (
       background-color: #fff;
       border-radius: 4px;
       padding: 2px;
-      width: 12%;
-      min-width: 40px;
+      width: 13%;
+      min-width: 44px;
       text-align: center;
       flex-shrink: 0;
     }
 
     .ins-body {
-      padding: 3% 4%;
+      padding: 3.5% 4.5%;
       flex: 1;
       display: flex;
       flex-direction: column;
@@ -72,25 +75,25 @@ const GlobalStyles = () => (
 
     .ins-grid {
       display: grid;
-      grid-template-columns: 28% 1fr 18%;
-      gap: 1.5% 3%;
+      grid-template-columns: 30% 1fr 18%;
+      gap: 1.8% 3%;
       margin-top: 2%;
     }
 
     .ins-label { 
       font-weight: bold; 
-      opacity: 0.75; 
+      opacity: 0.8; 
       text-transform: uppercase; 
-      font-size: 0.8em; 
+      font-size: 0.75em; 
       white-space: nowrap;
     }
     .ins-value { 
       font-weight: 800; 
       text-transform: uppercase;
-      font-size: 1em;
+      font-size: 0.95em;
+      letter-spacing: -0.2px;
     }
 
-    /* Revenue License Styles */
     .revenue-circle {
       width: 100%;
       max-width: 340px;
@@ -109,12 +112,13 @@ const GlobalStyles = () => (
       color: #4A235A;
     }
 
-    /* Layout Helpers */
     .mobile-wrap { padding: 20px; width: 100%; box-sizing: border-box; }
+    
     .nav-fixed { 
       position: fixed; bottom: 24px; left: 24px; right: 24px; 
       background: rgba(255, 255, 255, 0.95); 
       backdrop-filter: blur(12px); 
+      -webkit-backdrop-filter: blur(12px);
       border-radius: 36px; 
       height: 72px;
       display: flex; justify-content: space-around; align-items: center;
@@ -123,8 +127,20 @@ const GlobalStyles = () => (
       border: 1px solid rgba(0,0,0,0.05);
     }
 
+    @keyframes pulse-gold {
+      0% { box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(234, 179, 8, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(234, 179, 8, 0); }
+    }
+    .ai-pulse { animation: pulse-gold 2s infinite; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     @media (max-width: 380px) {
-      .ins-grid { grid-template-columns: 32% 1fr; }
+      .ins-grid { grid-template-columns: 35% 1fr; }
       .ins-hide-small { display: none; }
     }
   `}</style>
@@ -152,8 +168,67 @@ const DATA = {
   }
 };
 
+// Runtime environment provides apiKey, leave as empty string for integration
+const apiKey = ""; 
+
 export default function App() {
   const [activeTab, setActiveTab] = useState('home');
+  const [aiInsight, setAiInsight] = useState(null);
+  const [isAiLoading, setIsAiLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  /**
+   * Gemini API integration using gemini-2.5-flash-preview-09-2025 as per instructions.
+   * Implements mandatory exponential backoff.
+   */
+  const callGemini = async (prompt, retryCount = 0) => {
+    try {
+      // Reverted to gemini-2.5-flash-preview-09-2025 as mandated for the preview environment
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          systemInstruction: { 
+            parts: [{ text: "You are a specialized motorcycle mechanic assistant for a Honda CD 125. Provide concise, bullet-pointed maintenance advice based on provided data. Be professional and practical." }] 
+          }
+        })
+      });
+
+      if (response.status === 403) {
+        throw new Error("Authentication failed. Please ensure a valid API key is set.");
+      }
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error?.message || "API Connection failed");
+      }
+      
+      const result = await response.json();
+      return result.candidates?.[0]?.content?.parts?.[0]?.text;
+    } catch (err) {
+      if (retryCount < 5 && !err.message.includes("Authentication")) {
+        const delay = Math.pow(2, retryCount) * 1000;
+        await new Promise(res => setTimeout(res, delay));
+        return callGemini(prompt, retryCount + 1);
+      }
+      throw err;
+    }
+  };
+
+  const generateInsight = async () => {
+    setIsAiLoading(true);
+    setError(null);
+    try {
+      const prompt = `My bike is a ${DATA.ins.makeModel}. Current mileage is 12,450km. Insurance expires: ${DATA.ins.period.split(' To ')[1]}. Revenue license from: ${DATA.rev.year}. Suggest 3 priority maintenance tasks.`;
+      const insight = await callGemini(prompt);
+      setAiInsight(insight);
+    } catch (err) {
+      setError(err.message || "Something went wrong. Please check your connection.");
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
 
   const InsuranceView = () => (
     <div className="mobile-wrap">
@@ -172,11 +247,11 @@ export default function App() {
         </div>
 
         <div className="ins-body">
-          <div style={{position:'absolute', top:'4px', right:'12px', fontStyle:'italic', opacity:0.6, fontSize:'0.8em', fontWeight:'bold'}}>{DATA.ins.cardNo}</div>
+          <div style={{position:'absolute', top:'4px', right:'12px', fontStyle:'italic', opacity:0.6, fontSize:'0.85em', fontWeight:'bold'}}>{DATA.ins.cardNo}</div>
           
           <div className="ins-grid">
             <div className="ins-label">Vehicle No</div>
-            <div className="ins-value" style={{fontSize:'1.2em'}}>{DATA.ins.vehicleNo}</div>
+            <div className="ins-value" style={{fontSize:'1.15em'}}>{DATA.ins.vehicleNo}</div>
             <div className="ins-value ins-hide-small" style={{textAlign:'right'}}>CD 125</div>
 
             <div className="ins-label">Make & Model</div>
@@ -189,13 +264,13 @@ export default function App() {
             <div className="ins-value" style={{gridColumn:'span 2'}}>{DATA.ins.name}</div>
 
             <div className="ins-label">Address</div>
-            <div className="ins-value" style={{gridColumn:'span 2', fontSize:'0.85em', lineHeight:1.3}}>{DATA.ins.address}</div>
+            <div className="ins-value" style={{gridColumn:'span 2', fontSize:'0.8em', lineHeight:1.4}}>{DATA.ins.address}</div>
 
             <div className="ins-label">Period</div>
             <div className="ins-value" style={{gridColumn:'span 2'}}>{DATA.ins.period}</div>
 
             <div className="ins-label">Eng/Chassis</div>
-            <div className="ins-value" style={{gridColumn:'span 2', fontSize:'0.9em'}}>{DATA.ins.engine} / {DATA.ins.chassis}</div>
+            <div className="ins-value" style={{gridColumn:'span 2', fontSize:'0.85em'}}>{DATA.ins.engine} / {DATA.ins.chassis}</div>
           </div>
 
           <div style={{fontSize:'0.65em', opacity:0.6, borderTop:'1px solid rgba(0,0,0,0.12)', paddingTop:'5px', fontWeight:'500'}}>
@@ -266,35 +341,85 @@ export default function App() {
             <div style={{fontSize:'20px', fontWeight:'900', color:'#4ade80', marginTop:'4px'}}>GOOD</div>
           </div>
         </div>
-        <div style={{position:'absolute', right:'-20px', bottom:'-20px', width:'150px', height:'150px', background:'radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%)', borderRadius:'50%'}}></div>
+      </div>
+
+      {/* AI Maintenance Check - Unified Model Config */}
+      <div style={{marginTop:'28px', width: '100%'}}>
+        <div style={{
+          background: 'linear-gradient(135deg, #ffffff 0%, #fefce8 100%)',
+          borderRadius: '28px',
+          padding: '24px',
+          border: '1px solid #fef08a',
+          boxShadow: '0 10px 25px -5px rgba(234, 179, 8, 0.1)',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: aiInsight || isAiLoading ? '16px' : '0'}}>
+            <div style={{display:'flex', alignItems:'center', gap:'12px'}}>
+              <div style={{background:'#fef9c3', padding: '10px', borderRadius: '14px', display:'flex', alignItems:'center', justifyContent:'center', width:'40px', height:'40px'}}>
+                <Sparkles size={20} color="#ca8a04" />
+              </div>
+              <div>
+                <h3 style={{fontSize:'14px', fontWeight:'900', color:'#854d0e', margin:0}}>AI Mechanic</h3>
+                <p style={{fontSize:'10px', color:'#a16207', fontWeight:'bold', margin:0}}>SMART ANALYSIS</p>
+              </div>
+            </div>
+            {!aiInsight && !isAiLoading && (
+              <button 
+                onClick={generateInsight}
+                className="ai-pulse"
+                style={{background:'#000', color:'#fff', border:'none', padding:'8px 16px', borderRadius:'12px', fontSize:'11px', fontWeight:'bold', cursor:'pointer'}}
+              >
+                Scan ✨
+              </button>
+            )}
+          </div>
+
+          {isAiLoading && (
+            <div style={{display:'flex', alignItems:'center', gap:'12px', padding:'12px 0'}}>
+              <Loader2 className="animate-spin" size={20} color="#ca8a04" />
+              <p style={{fontSize:'12px', color:'#854d0e', fontWeight:'bold'}}>Consulting AI Mechanic...</p>
+            </div>
+          )}
+
+          {error && (
+            <div style={{display:'flex', alignItems:'flex-start', gap:'8px', color:'#dc2626', fontSize:'12px', fontWeight:'bold', padding:'8px 0'}}>
+              <AlertCircle size={16} style={{marginTop:'2px', flexShrink:0}} />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {aiInsight && (
+            <div style={{animation: 'fadeIn 0.5s ease-out'}}>
+              <div style={{
+                fontSize: '13px',
+                color: '#422006',
+                lineHeight: '1.6',
+                whiteSpace: 'pre-line',
+                fontWeight: '500'
+              }}>
+                {aiInsight}
+              </div>
+              <button 
+                onClick={() => setAiInsight(null)}
+                style={{marginTop:'12px', background:'none', border:'none', color:'#a16207', fontSize:'11px', fontWeight:'bold', textDecoration:'underline', cursor:'pointer'}}
+              >
+                Clear Insight
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'20px', marginTop:'28px'}}>
-        <button onClick={() => setActiveTab('insurance')} style={{background:'#fff', padding:'24px', borderRadius:'28px', border:'1px solid #f3f4f6', boxShadow:'0 4px 12px rgba(0,0,0,0.03)', display:'flex', flexDirection:'column', alignItems:'center', gap:'10px', cursor:'pointer'}}>
+        <button onClick={() => setActiveTab('insurance')} style={{background:'#fff', padding:'24px', borderRadius:'28px', border:'1px solid #f3f4f6', boxShadow: activeTab === 'insurance' ? '0 0 0 2px #000' : '0 4px 12px rgba(0,0,0,0.03)', display:'flex', flexDirection:'column', alignItems:'center', gap:'10px', cursor:'pointer'}}>
           <div style={{background:'#fefce8', padding:'12px', borderRadius:'18px'}}><ShieldCheck style={{color:'#ca8a04', width:'30px', height:'30px'}} /></div>
           <span style={{fontSize:'11px', fontWeight:'900', textTransform:'uppercase', letterSpacing:'0.5px', color:'#4b5563'}}>Insurance</span>
         </button>
-        <button onClick={() => setActiveTab('revenue')} style={{background:'#fff', padding:'24px', borderRadius:'28px', border:'1px solid #f3f4f6', boxShadow:'0 4px 12px rgba(0,0,0,0.03)', display:'flex', flexDirection:'column', alignItems:'center', gap:'10px', cursor:'pointer'}}>
+        <button onClick={() => setActiveTab('revenue')} style={{background:'#fff', padding:'24px', borderRadius:'28px', border:'1px solid #f3f4f6', boxShadow: activeTab === 'revenue' ? '0 0 0 2px #000' : '0 4px 12px rgba(0,0,0,0.03)', display:'flex', flexDirection:'column', alignItems:'center', gap:'10px', cursor:'pointer'}}>
           <div style={{background:'#f5f3ff', padding:'12px', borderRadius:'18px'}}><FileText style={{color:'#7c3aed', width:'30px', height:'30px'}} /></div>
           <span style={{fontSize:'11px', fontWeight:'900', textTransform:'uppercase', letterSpacing:'0.5px', color:'#4b5563'}}>Revenue</span>
         </button>
-      </div>
-      
-      <div style={{marginTop:'32px'}}>
-        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'0 8px', marginBottom:'16px'}}>
-          <h3 style={{fontSize:'12px', fontWeight:'900', textTransform:'uppercase', letterSpacing:'1.5px', color:'#9ca3af', margin:0}}>Quick Logs</h3>
-          <span style={{fontSize:'11px', fontWeight:'bold', color:'#3b82f6'}}>View All</span>
-        </div>
-        <div style={{background:'#fff', padding:'20px', borderRadius:'24px', display:'flex', alignItems:'center', justifyContent:'space-between', border:'1px solid #f3f4f6', boxShadow:'0 4px 12px rgba(0,0,0,0.02)'}}>
-           <div style={{display:'flex', alignItems:'center', gap:'16px'}}>
-             <div style={{background:'#fff7ed', padding:'12px', borderRadius:'16px'}}><Calendar style={{color:'#f97316', width:'24px', height:'24px'}} /></div>
-             <div>
-               <div style={{fontSize:'14px', fontWeight:'900', color:'#1f2937'}}>Tyre Checkup</div>
-               <div style={{fontSize:'10px', fontWeight:'bold', color:'#f97316', textTransform:'uppercase', marginTop:'2px'}}>Due in 5 days</div>
-             </div>
-           </div>
-           <ChevronRight style={{color:'#d1d5db'}} />
-        </div>
       </div>
     </div>
   );
@@ -338,7 +463,7 @@ export default function App() {
         <button onClick={() => setActiveTab('tyres')} style={{border:'none', background:'none', color: activeTab === 'tyres' ? '#000' : '#9ca3af', padding:'10px', cursor:'pointer'}}>
           <CircleDot style={{width:'26px', height:'26px'}} />
         </button>
-        <button onClick={() => setActiveTab('insurance')} style={{border:'none', background:'none', color: activeTab === 'insurance' || activeTab === 'revenue' ? '#000' : '#9ca3af', padding:'10px', cursor:'pointer'}}>
+        <button onClick={() => (activeTab === 'insurance' || activeTab === 'revenue') ? setActiveTab('home') : setActiveTab('insurance')} style={{border:'none', background:'none', color: (activeTab === 'insurance' || activeTab === 'revenue') ? '#000' : '#9ca3af', padding:'10px', cursor:'pointer'}}>
           <ShieldCheck style={{width:'26px', height:'26px'}} />
         </button>
       </nav>
